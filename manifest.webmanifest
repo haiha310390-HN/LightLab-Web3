@@ -1,0 +1,1 @@
+{"name": "LightLAB Web 3", "short_name": "LightLAB 3", "start_url": ".", "display": "standalone", "background_color": "#EEDEC4", "theme_color": "#1F5F63", "icons": [{"src": "assets/icon-192.png", "sizes": "192x192", "type": "image/png"}, {"src": "assets/icon-512.png", "sizes": "512x512", "type": "image/png"}]}

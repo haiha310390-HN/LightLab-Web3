@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,interactive-widget=resizes-content">
+<title>LightLAB Web 3</title>
+<link rel="icon" href="assets/icon.png">
+<link rel="apple-touch-icon" href="assets/icon-192.png">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#1F5F63">
+<style>
+:root{--bg:#EEDEC4;--ink:#3B2F22;--acc:#1F5F63;--card:#F8F0DF;--track:#D8C3A0;--hint:#7D6A52}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;margin:0}
+body{display:flex;flex-direction:column;background:var(--bg);color:var(--ink);font:14px system-ui,sans-serif;overflow:hidden}
+#stage{flex:1;min-height:0;background:#1d1812 url(assets/bg.jpg) center/cover no-repeat;display:flex;align-items:center;justify-content:center;position:relative;padding-top:env(safe-area-inset-top)}
+#cv{display:none;box-shadow:0 2px 18px #0009;max-width:100%;max-height:100%;touch-action:none;user-select:none;-webkit-user-select:none}
+#tag{position:absolute;left:8px;top:calc(52px + env(safe-area-inset-top));background:#000a;color:#fff;padding:3px 8px;border-radius:10px;font-size:12px;display:none}
+#msg{position:absolute;bottom:8px;left:50%;transform:translateX(-50%);background:#000b;color:#fff;padding:4px 12px;border-radius:12px;font-size:12px;display:none;white-space:nowrap}
+#panel{background:var(--card);border-top:1px solid var(--track);padding:8px 14px;max-height:38dvh;overflow-y:auto;display:none}
+.row{margin:4px 0 8px}.row .h{display:flex;justify-content:space-between;font-size:13px}
+.row .h b{color:var(--acc);font-weight:600}.row .h span{cursor:pointer}
+input[type=range]{width:100%;accent-color:var(--acc);height:28px;margin:0}
+.chips{display:flex;gap:6px;overflow-x:auto;padding:2px 0 8px}
+.chip{flex:none;border:1px solid var(--track);background:#fff8;color:var(--ink);padding:6px 12px;border-radius:16px;font-size:13px;cursor:pointer;display:flex;align-items:center;gap:6px}
+.chip.on{background:var(--acc);color:#fff;border-color:var(--acc)}
+.dot{width:10px;height:10px;border-radius:50%}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:0 18px}
+@media(max-width:560px){.grid{grid-template-columns:1fr}}
+.btn{background:var(--acc);color:#fff;border:0;padding:10px 18px;border-radius:10px;font-size:15px;width:100%;margin-top:4px}
+.hint{color:var(--hint);font-size:12px;margin:2px 0 6px}
+#strip{display:flex;gap:2px;overflow-x:auto;scroll-snap-type:x proximity;background:var(--bg);border-top:1px solid var(--track);padding:6px 6px calc(6px + env(safe-area-inset-bottom));-webkit-overflow-scrolling:touch;scrollbar-width:none}
+#strip::-webkit-scrollbar{display:none}
+.ic{flex:none;width:68px;scroll-snap-align:start;text-align:center;padding:4px 2px;border-radius:12px;cursor:pointer;border:2px solid transparent}
+.ic img{width:48px;height:48px;object-fit:contain;display:block;margin:0 auto 2px;pointer-events:none}
+.ic span{font-size:10.5px;line-height:1.15;display:block;min-height:24px}
+.ic.on{background:var(--card);border-color:var(--acc)}
+.ic.mod::after{content:"";display:block;width:6px;height:6px;border-radius:50%;background:var(--acc);margin:-2px auto 0}
+#top{position:absolute;top:0;left:0;right:0;display:flex;align-items:center;gap:8px;padding:calc(6px + env(safe-area-inset-top)) 10px 18px;background:linear-gradient(#0008,#0000);z-index:5;pointer-events:none}
+#top>*{pointer-events:auto}#top img{width:34px;height:34px;border-radius:8px}
+#top b{color:#fff;font-size:15px;text-shadow:0 1px 3px #000a;flex:1}
+#top select,#top button{background:#000a;color:#fff;border:1px solid #fff5;border-radius:10px;padding:6px 8px;font-size:13px}
+#chat{position:fixed;left:0;right:0;bottom:var(--kb,0px);max-height:calc(var(--vh,100dvh)*.72);touch-action:manipulation;-webkit-user-select:text;user-select:text;background:var(--card);border-top:2px solid var(--acc);display:none;flex-direction:column;z-index:30}
+#log{flex:1;overflow-y:auto;padding:8px 12px;min-height:70px}
+.m{margin:4px 0;padding:6px 10px;border-radius:12px;white-space:pre-wrap;max-width:90%;overflow-wrap:anywhere}
+.m.u{background:var(--acc);color:#fff;margin-left:auto}.m.a{background:#fff;border:1px solid var(--track)}
+#cset{display:none;padding:8px 12px;border-bottom:1px solid var(--track);font-size:12px;color:var(--hint)}
+#cset label{display:block;margin:4px 0 2px}
+#cset input,#cbar input[type=text]{width:100%;border:1px solid var(--track);border-radius:10px;padding:7px 10px;font-size:16px;-webkit-user-select:text;user-select:text;background:#fff;color:var(--ink)}
+#cbar{display:flex;align-items:center;gap:6px;padding:6px 10px calc(6px + env(safe-area-inset-bottom));border-top:1px solid var(--track)}
+#cbar input[type=text]{flex:1;min-width:0;border-radius:18px;padding:9px 14px}
+#cbar button{background:var(--acc);color:#fff;border:0;border-radius:18px;padding:9px 14px;font-size:14px}
+#cbar #gear{background:none;color:var(--ink);padding:6px;font-size:18px}
+#attl{display:flex;align-items:center;gap:6px;padding:0 12px 4px;font-size:12px;color:var(--hint)}
+.ptabs{display:flex;gap:6px;margin-bottom:8px}
+.ptab{flex:1;text-align:center;padding:7px 4px;border-radius:10px;border:1px solid var(--track);background:#fff8;font-size:13px;cursor:pointer;user-select:none;-webkit-user-select:none}
+.ptab.on{background:var(--acc);color:#fff;border-color:var(--acc)}
+.star{flex:none;border:0;background:#fff;color:#c9b99a;border-radius:16px;width:34px;height:32px;font-size:20px;line-height:1;cursor:pointer;box-shadow:0 0 0 2px #f2b84b}
+.star.on{color:#f5b301}
+#cset select{width:100%;border:1px solid var(--track);border-radius:10px;padding:7px 10px;font-size:16px;background:#fff;color:var(--ink)}
+#gmref{background:var(--acc);color:#fff;border:0;border-radius:10px;padding:0 14px;font-size:18px}
+#panel .plist{display:flex;gap:8px;overflow-x:auto;padding:4px 2px 8px;scroll-snap-type:x proximity;-webkit-overflow-scrolling:touch;-webkit-touch-callout:none;user-select:none;-webkit-user-select:none}
+.pt{flex:none;width:96px;position:relative;text-align:center;scroll-snap-align:start;touch-action:pan-x;cursor:pointer}
+.pt .im{width:96px;height:72px;border-radius:8px;border:3px solid transparent;box-sizing:border-box;background:#0002 center/cover no-repeat;position:relative}
+.pt .im.bad::after{content:"!";position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#fff;font-size:20px;background:#0006;border-radius:5px}
+.pt.on .im{border-color:var(--acc);box-shadow:0 0 0 1px var(--acc)}
+.pt .nm{font-size:11px;line-height:1.2;margin-top:3px;height:26px;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow-wrap:anywhere}
+.pt.on .nm{color:var(--acc);font-weight:600}
+.pt .star{position:absolute;right:5px;top:5px;width:30px;height:30px;border-radius:50%;padding:0;font-size:18px;box-shadow:0 0 0 2px #f2b84b,0 1px 4px #0006}
+.plist .hint{flex:none;align-self:center;max-width:260px}
+</style>
+</head>
+<body>
+<div id="stage"><canvas id="cv"></canvas>
+<div id="top"><img src="assets/icon.png" alt=""><b>LightLAB · Web 3</b><select id="lang" aria-label="Language"></select><button id="cb">✦ Meta AI</button></div>
+<div id="tag"></div><div id="msg"></div>
+<div id="chat"><div id="cset"><label id="lprov"></label><select id="gprov"><option value="ollama"></option><option value="lmstudio"></option><option value="meta">Meta Llama API</option><option value="groq">Groq (Llama)</option><option value="openrouter">OpenRouter (Llama)</option><option value="other"></option></select><label id="lkey"></label><input type="password" id="gkey" autocomplete="off"><label id="lbase"></label><input type="text" id="gbase" placeholder="https://api.llama.com/compat/v1"><label id="lmod"></label><div style="display:flex;gap:6px"><input type="text" id="gmod" list="mlist" style="flex:1"><button type="button" id="gmref" title="Models">↻</button></div><datalist id="mlist"></datalist><div id="cstat" style="margin-top:6px;color:var(--ink)"></div><div style="margin-top:6px"><span id="lhelp"></span> <a id="lhelplink" target="_blank" rel="noopener"></a></div></div>
+<div id="log"></div><label id="attl"><input type="checkbox" id="att" checked><span id="latt"></span></label>
+<div id="cbar"><button id="gear">⚙</button><input type="text" id="cin" autocomplete="off" autocapitalize="sentences" enterkeyhint="send" inputmode="text"><button id="csend"></button></div></div></div>
+<div id="panel"></div>
+<div id="strip"></div>
+<input type="file" id="file" accept="image/*,.nef,.arw,.dng,.raf,.cr2,.orf,.raw" hidden>
+<script>
+const $=s=>document.getElementById(s),cl=v=>v<0?0:v>255?255:v;
+const I18N={"Mở hình ảnh":["Mở hình ảnh","Open image","Ouvrir une image","画像を開く","이미지 열기","打开图片","เปิดรูปภาพ","Bild öffnen","Открыть изображение"],"Độ phơi sáng":["Độ phơi sáng","Exposure","Exposition","露光量","노출","曝光度","ค่าแสง","Belichtung","Экспозиция"],"Độ tương phản":["Độ tương phản","Contrast","Contraste","コントラスト","대비","对比度","คอนทราสต์","Kontrast","Контраст"],"Vùng sáng":["Vùng sáng","Highlights","Hautes lumières","ハイライト","밝은 영역","高光","ไฮไลต์","Lichter","Света"],"Vùng tối":["Vùng tối","Shadows","Ombres","シャドウ","어두운 영역","阴影","เงา","Tiefen","Тени"],"Điểm trắng":["Điểm trắng","Whites","Blancs","白レベル","흰색 계열","白色色阶","จุดขาว","Weiß","Белые"],"Điểm đen":["Điểm đen","Blacks","Noirs","黒レベル","검정 계열","黑色色阶","จุดดำ","Schwarz","Чёрные"],"Đường cong":["Đường cong","Curve","Courbe","トーンカーブ","곡선","曲线","เส้นโค้ง","Gradationskurve","Кривая"],"Nhiệt độ màu":["Nhiệt độ màu","Temperature","Température","色温度","색온도","色温","อุณหภูมิสี","Temperatur","Температура"],"Sắc thái (Tint)":["Sắc thái (Tint)","Tint","Dominante (Tint)","色かぶり補正","틴트","色调 (Tint)","ทินต์","Tönung","Оттенок"],"Độ bão hòa":["Độ bão hòa","Saturation","Saturation","彩度","채도","饱和度","ความอิ่มตัว","Sättigung","Насыщенность"],"Độ rực màu":["Độ rực màu","Vibrance","Vibrance","自然な彩度","활기","自然饱和度","ความสดของสี","Dynamik","Красочность"],"Phối màu":["Phối màu","Color grading","Étalonnage","カラーグレーディング","컬러 그레이딩","颜色分级","การเกรดสี","Farbkorrektur","Цветокоррекция"],"Lưu ảnh":["Lưu ảnh","Save photo","Enregistrer la photo","写真を保存","사진 저장","保存照片","บันทึกรูป","Foto speichern","Сохранить фото"],"Đặt lại":["Đặt lại","Reset","Réinitialiser","リセット","초기화","重置","รีเซ็ต","Zurücksetzen","Сбросить"],"Đỏ":["Đỏ","Red","Rouge","赤","빨강","红","แดง","Rot","Красный"],"Cam":["Cam","Orange","Orange","オレンジ","주황","橙","ส้ม","Orange","Оранжевый"],"Vàng":["Vàng","Yellow","Jaune","黄","노랑","黄","เหลือง","Gelb","Жёлтый"],"Lục":["Lục","Green","Vert","緑","초록","绿","เขียว","Grün","Зелёный"],"Lam":["Lam","Blue","Bleu","青","파랑","蓝","น้ำเงิน","Blau","Синий"],"Tím":["Tím","Purple","Violet","紫","보라","紫","ม่วง","Violett","Фиолетовый"],"Hồng":["Hồng","Magenta","Magenta","マゼンタ","마젠타","洋红","ม่วงแดง","Magenta","Пурпурный"],"Sắc độ":["Sắc độ","Hue","Teinte","色相","색조","色相","เฉดสี","Farbton","Оттенок"],"Bão hòa":["Bão hòa","Saturation","Saturation","彩度","채도","饱和度","ความอิ่มตัว","Sättigung","Насыщенность"],"Độ sáng":["Độ sáng","Luminance","Luminance","輝度","휘도","明亮度","ความสว่าง","Luminanz","Светлота"],"Tối: sắc độ":["Tối: sắc độ","Shadows: hue","Ombres : teinte","シャドウ: 色相","어두운 영역: 색조","阴影: 色相","เงา: เฉดสี","Tiefen: Farbton","Тени: Оттенок"],"Tối: bão hòa":["Tối: bão hòa","Shadows: saturation","Ombres : saturation","シャドウ: 彩度","어두운 영역: 채도","阴影: 饱和度","เงา: ความอิ่มตัว","Tiefen: Sättigung","Тени: Насыщенность"],"Tối: độ sáng":["Tối: độ sáng","Shadows: luminance","Ombres : luminance","シャドウ: 輝度","어두운 영역: 휘도","阴影: 明亮度","เงา: ความสว่าง","Tiefen: Luminanz","Тени: Светлота"],"Giữa: sắc độ":["Giữa: sắc độ","Midtones: hue","Tons moyens : teinte","中間調: 色相","중간 영역: 색조","中间调: 色相","โทนกลาง: เฉดสี","Mitteltöne: Farbton","Средние тона: Оттенок"],"Giữa: bão hòa":["Giữa: bão hòa","Midtones: saturation","Tons moyens : saturation","中間調: 彩度","중간 영역: 채도","中间调: 饱和度","โทนกลาง: ความอิ่มตัว","Mitteltöne: Sättigung","Средние тона: Насыщенность"],"Giữa: độ sáng":["Giữa: độ sáng","Midtones: luminance","Tons moyens : luminance","中間調: 輝度","중간 영역: 휘도","中间调: 明亮度","โทนกลาง: ความสว่าง","Mitteltöne: Luminanz","Средние тона: Светлота"],"Sáng: sắc độ":["Sáng: sắc độ","Highlights: hue","Hautes lumières : teinte","ハイライト: 色相","밝은 영역: 색조","高光: 色相","ไฮไลต์: เฉดสี","Lichter: Farbton","Света: Оттенок"],"Sáng: bão hòa":["Sáng: bão hòa","Highlights: saturation","Hautes lumières : saturation","ハイライト: 彩度","밝은 영역: 채도","高光: 饱和度","ไฮไลต์: ความอิ่มตัว","Lichter: Sättigung","Света: Насыщенность"],"Sáng: độ sáng":["Sáng: độ sáng","Highlights: luminance","Hautes lumières : luminance","ハイライト: 輝度","밝은 영역: 휘도","高光: 明亮度","ไฮไลต์: ความสว่าง","Lichter: Luminanz","Света: Светлота"],"Hòa trộn":["Hòa trộn","Blending","Fusion","ブレンド","혼합","混合","การผสม","Überblendung","Смешивание"],"Cân bằng":["Cân bằng","Balance","Équilibre","バランス","균형","平衡","สมดุล","Balance","Баланс"],"Độ cong chữ S":["Độ cong chữ S","S-curve amount","Intensité de la courbe en S","S字カーブ量","S자 곡선 양","S形曲线强度","ปริมาณเส้นโค้งตัว S","S-Kurven-Stärke","Сила S-кривой"],"Chưa mở ảnh":["Chưa mở ảnh","No photo open","Aucune photo ouverte","写真が開かれていません","열린 사진 없음","未打开照片","ยังไม่ได้เปิดรูป","Kein Foto geöffnet","Фото не открыто"],"Cường độ":["Cường độ","Intensity","Intensité","強さ","강도","强度","ความแรง","Stärke","Интенсивность"],"Tắt":["Tắt","Off","Désactivé","オフ","끔","关闭","ปิด","Aus","Выкл."],"Chất lượng JPEG":["Chất lượng JPEG","JPEG quality","Qualité JPEG","JPEG画質","JPEG 품질","JPEG 质量","คุณภาพ JPEG","JPEG-Qualität","Качество JPEG"],"Ảnh gốc":["Ảnh gốc","Original","Original","元画像","원본","原图","ต้นฉบับ","Original","Оригинал"],"Đang mở ảnh…":["Đang mở ảnh…","Opening image…","Ouverture…","開いています…","여는 중…","正在打开…","กำลังเปิด…","Wird geöffnet…","Открытие…"],"Không mở được ảnh":["Không mở được ảnh","Cannot open image","Ouverture impossible","開けません","열 수 없음","无法打开","เปิดไม่ได้","Kann nicht geöffnet werden","Не удалось открыть"],"Đang tải preset…":["Đang tải preset…","Loading preset…","Chargement…","読み込み中…","불러오는 중…","正在加载预设…","กำลังโหลด…","Wird geladen…","Загрузка…"],"Lỗi tải preset":["Lỗi tải preset","Preset load error","Erreur de chargement","読み込みエラー","불러오기 오류","预设加载失败","โหลดไม่สำเร็จ","Ladefehler","Ошибка загрузки"],"Đang xử lý ảnh…":["Đang xử lý ảnh…","Processing…","Traitement…","処理中…","처리 중…","正在处理…","กำลังประมวลผล…","Verarbeitung…","Обработка…"],"Đã lưu":["Đã lưu","Saved","Enregistré","保存しました","저장됨","已保存","บันทึกแล้ว","Gespeichert","Сохранено"],"Lỗi":["Lỗi","Error","Erreur","エラー","오류","错误","ข้อผิดพลาด","Fehler","Ошибка"],"Hỏi Meta AI về chỉnh ảnh…":["Hỏi Meta AI về chỉnh ảnh…","Ask Meta AI about editing…","Demandez à Meta AI…","Meta AIに編集を相談…","Meta AI에게 보정 질문…","向 Meta AI 询问修图…","ถาม Meta AI เรื่องแต่งภาพ…","Frag Meta AI zur Bearbeitung…","Спросите Meta AI о ретуши…"],"Gửi":["Gửi","Send","Envoyer","送信","보내기","发送","ส่ง","Senden","Отправить"],"Kèm ảnh hiện tại":["Kèm ảnh hiện tại","Attach current photo","Joindre la photo","現在の写真を添付","현재 사진 첨부","附上当前照片","แนบภาพปัจจุบัน","Aktuelles Foto anhängen","Прикрепить фото"],"Khóa API Meta AI":["Khóa API Meta AI","Meta AI API key","Clé API Meta AI","Meta AI APIキー","Meta AI API 키","Meta AI API 密钥","คีย์ Meta AI API","Meta-AI-API-Schlüssel","API-ключ Meta AI"],"Mô hình":["Mô hình","Model","Modèle","モデル","모델","模型","โมเดล","Modell","Модель"],"Khóa chỉ lưu trong trình duyệt này. Lấy khóa miễn phí:":["Khóa chỉ lưu trong trình duyệt này. Lấy khóa miễn phí:","Key stays in this browser only. Get a key:","La clé reste dans ce navigateur. Obtenir une clé :","キーはこのブラウザにのみ保存。キー取得：","키는 이 브라우저에만 저장됩니다. 키 발급:","密钥仅保存在此浏览器。获取密钥：","คีย์เก็บในเบราว์เซอร์นี้เท่านั้น รับคีย์:","Schlüssel nur in diesem Browser. Schlüssel holen:","Ключ хранится только в этом браузере. Получить ключ:"],"Nhập khóa API Meta AI ở ⚙ trước":["Nhập khóa API Meta AI ở ⚙ trước","Enter your Meta AI API key in ⚙ first","Saisissez d’abord la clé API dans ⚙","先に ⚙ で Meta AI APIキーを入力","먼저 ⚙ 에서 API 키 입력","请先在 ⚙ 输入 Meta AI API 密钥","ใส่คีย์ Meta AI API ที่ ⚙ ก่อน","Zuerst API-Schlüssel unter ⚙ eingeben","Сначала введите API-ключ в ⚙"]},LANGS=['Tiếng Việt','English','Français','日本語','한국어','中文','ไทย','Deutsch','Русский'],LCODE=['vi','en','fr','ja','ko','zh','th','de','ru'];
+let L=LCODE.indexOf(localStorage.lang);if(L<0){L=LCODE.indexOf((navigator.language||'en').slice(0,2));if(L<0)L=1}
+Object.assign(I18N,{"trên máy bạn":["trên máy bạn","on your computer"],"Không kết nối được máy chủ trên máy bạn. Kiểm tra: Ollama/LM Studio đang chạy; đã cho phép trang này (Ollama: đặt OLLAMA_ORIGINS=https://<tên>.github.io rồi khởi động lại; LM Studio: bật CORS); và trang đang mở trên chính máy đó.":["Không kết nối được máy chủ trên máy bạn. Kiểm tra: Ollama/LM Studio đang chạy; đã cho phép trang này (Ollama: đặt OLLAMA_ORIGINS=https://<tên>.github.io rồi khởi động lại; LM Studio: bật CORS); và trang đang mở trên chính máy đó.","Cannot reach the server on your computer. Check: Ollama/LM Studio is running; this page is allowed (Ollama: set OLLAMA_ORIGINS=https://<name>.github.io and restart; LM Studio: enable CORS); and the page is open on that same computer."],"Trình duyệt chặn trang HTTPS gọi tới địa chỉ HTTP ngoài máy này. Dùng http://localhost trên chính máy chạy Ollama, hoặc một đường hầm HTTPS (Tailscale / Cloudflare Tunnel).":["Trình duyệt chặn trang HTTPS gọi tới địa chỉ HTTP ngoài máy này. Dùng http://localhost trên chính máy chạy Ollama, hoặc một đường hầm HTTPS (Tailscale / Cloudflare Tunnel).","The browser blocks an HTTPS page from calling an HTTP address outside this computer. Use http://localhost on the machine running Ollama, or an HTTPS tunnel (Tailscale / Cloudflare Tunnel)."],"Mô hình này không đọc được ảnh nên chỉ gửi văn bản.":["Mô hình này không đọc được ảnh nên chỉ gửi văn bản.","This model cannot read images, so only the text was sent."],"Mô hình chưa được tải: chạy \"ollama pull <tên>\" hoặc bấm ↻ để chọn mô hình đã cài.":["Mô hình chưa được tải: chạy \"ollama pull <tên>\" hoặc bấm ↻ để chọn mô hình đã cài.","Model not installed: run \"ollama pull <name>\" or press ↻ to pick an installed model."],"Không có mô hình nào được cài. Chạy \"ollama pull llama3.2\" rồi bấm ↻.":["Không có mô hình nào được cài. Chạy \"ollama pull llama3.2\" rồi bấm ↻.","No models installed. Run \"ollama pull llama3.2\", then press ↻."]});
+Object.assign(I18N,{"Nhà cung cấp":["Nhà cung cấp","Provider"],"Khác":["Khác","Other"],"Khóa này thuộc {x}, không dùng được với Llama. Hãy dùng khóa của nhà cung cấp đã chọn.":["Khóa này thuộc {x}, không dùng được với Llama. Hãy dùng khóa của nhà cung cấp đã chọn.","This is a {x} key and will not work with Llama. Use a key from the selected provider."],"Khóa bị từ chối. Kiểm tra: khóa đúng nhà cung cấp đã chọn trong ⚙, không thừa ký tự, còn hiệu lực.":["Khóa bị từ chối. Kiểm tra: khóa đúng nhà cung cấp đã chọn trong ⚙, không thừa ký tự, còn hiệu lực.","Key rejected. Check that it belongs to the provider selected in ⚙, has no extra characters, and is still valid."],"Nhập Địa chỉ API và Mô hình ở ⚙":["Nhập Địa chỉ API và Mô hình ở ⚙","Enter the API address and model in ⚙"],"mô hình":["mô hình","models"],"chọn trong ô Mô hình":["chọn trong ô Mô hình","pick one in the Model field"]});
+Object.assign(I18N,{"Địa chỉ API":["Địa chỉ API","API address"],"Không kết nối được API. Có thể nhà cung cấp chặn gọi từ trình duyệt (CORS): thử đổi Địa chỉ API.":["Không kết nối được API. Có thể nhà cung cấp chặn gọi từ trình duyệt (CORS): thử đổi Địa chỉ API.","Cannot reach the API. The provider may block browser calls (CORS): try another API address."]});
+Object.assign(I18N,{"Film preset":["Film preset","Film preset"],"Lut preset":["Lut preset","LUT preset"],"Yêu thích":["Yêu thích","Favorites"],"Chưa có LUT. Thêm file .cube vào thư mục LUT trên GitHub.":["Chưa có LUT. Thêm file .cube vào thư mục LUT trên GitHub.","No LUTs yet. Add .cube files to the LUT folder on GitHub."],"Chưa có mục yêu thích. Ấn giữ một preset rồi chạm ★.":["Chưa có mục yêu thích. Ấn giữ một preset rồi chạm ★.","No favorites yet. Long-press a preset, then tap ★."],"Đang tải danh sách LUT…":["Đang tải danh sách LUT…","Loading LUT list…"],"Không đọc được LUT":["Không đọc được LUT","Cannot read LUT"]});
+const t=(k,l=L)=>(I18N[k]&&(I18N[k][l]||I18N[k][1]))||k,tr=(k,l=L)=>k.includes(' - ')?k.split(' - ').map(x=>t(x,l)).join(' - '):t(k,l);
+
+// ===== Công cụ (giữ nguyên thứ tự, tên và icon của bản gốc) =====
+const TOOLS=[['Mở hình ảnh','i0.png','open'],['Preset','i1.png','preset'],['Độ phơi sáng','i2.png',[2]],['Độ tương phản','i3.png',[3]],['Vùng sáng','i4.png',[4]],['Vùng tối','i5.png',[5]],['Điểm trắng','i6.png',[6]],['Điểm đen','i7.png',[7]],['Đường cong','i8.png',[8]],['Nhiệt độ màu','i9.png',[9]],['Sắc thái (Tint)','i10.png',[10]],['Độ bão hòa','i11.png',[11]],['Độ rực màu','i12.png',[12]],['HSL','i13.png','hsl'],['Phối màu','i14.png','grade'],['Lưu ảnh','i15.png','save'],['Đặt lại','reset.png','reset']];
+const CN=['Đỏ','Cam','Vàng','Lục','Aqua','Lam','Tím','Hồng'],CCOL=['#e53935','#fb8c00','#fdd835','#43a047','#00bcd4','#1e66f5','#8e44ad','#ec407a'],CH=['Sắc độ','Bão hòa','Độ sáng'];
+const GN=['Tối: sắc độ','Tối: bão hòa','Tối: độ sáng','Giữa: sắc độ','Giữa: bão hòa','Giữa: độ sáng','Sáng: sắc độ','Sáng: bão hòa','Sáng: độ sáng','Hòa trộn','Cân bằng'];
+const NAME=[],MIN=[],MAX=[],STEP=[],DEF=new Array(48).fill(0);
+for(let i=2;i<48;i++){MIN[i]=-100;MAX[i]=100;STEP[i]=2}
+MIN[2]=-5;MAX[2]=5;STEP[2]=.1;for(let i=3;i<=8;i++)STEP[i]=5;
+[2,3,4,5,6,7,8,9,10,11,12].forEach(i=>NAME[i]=TOOLS[i][0]);NAME[8]='Độ cong chữ S';
+const TI=k=>TOOLS.findIndex(x=>x[2]==k);
+for(let k=0;k<8;k++)for(let j=0;j<3;j++)NAME[13+k*3+j]=CN[k]+' - '+CH[j];
+for(let i=0;i<11;i++)NAME[37+i]=GN[i];
+for(let i=37;i<44;i+=3){MIN[i]=0;MAX[i]=360;STEP[i]=5;MIN[i+1]=0;MAX[i+1]=100}
+MIN[46]=0;MAX[46]=100;DEF[46]=50;
+const PRESETS=['AeroLux_LUT','Astia','Classic_Chrome','Classic_Neg','Eterna','Pro_Neg_Hi','Pro_Neg_Ttd','Provia','Velvia','Fuji_Pro_400H','Fuji_Superia_400','Kodak_500T','Kodak_ColorPlus_200','Kodak_Gold_200','Portra_400','Ultramax_400'];
+// ===== Trạng thái =====
+let val=DEF.slice(),amount=100,pname=null,lut=null,cur=-1,hslSel=0,fname='anh',img=null,base=null,dirty=false,showOrig=false;
+const lutCache={},cv=$('cv'),ctx=cv.getContext('2d',{willReadFrequently:true});
+const msg=t=>{const m=$('msg');m.textContent=t;m.style.display=t?'block':'none'};
+// ===== Bộ xử lý ảnh (port từ build()/procJava() của bản Android) =====
+const s2l=v=>v<=.04045?v/12.92:Math.pow((v+.055)/1.055,2.4),l2s=x=>x<=.0031308?12.92*x:1.055*Math.pow(x,1/2.4)-.055;
+const sm=(a,b,x)=>{let t=Math.min(1,Math.max(0,(x-a)/(b-a)));return t*t*(3-2*t)};
+const CEN=[0,30,60,120,180,240,270,300];
+function seg(i0,deg,sc){let s=7;for(let k=0;k<8;k++)if(deg>=CEN[k]&&(k==7||deg<CEN[k+1])){s=k;break}
+ const a=CEN[s],b=s==7?360:CEN[s+1],t=(deg-a)/(b-a),n=(s+1)%8;return(val[i0+s*3]*(1-t)+val[i0+n*3]*t)*sc}
+function hue2rgb(d){const h=(d%360)/60,i=h|0,f=h-i;return[[1,f,0],[1-f,1,0],[0,1,f],[0,1-f,1],[f,0,1],[1,0,1-f]][i%6]}
+const exR=new Int32Array(256),exG=new Int32Array(256),exB=new Int32Array(256),dl=new Int32Array(256),cgR=new Int32Array(256),cgG=new Int32Array(256),cgB=new Int32Array(256),oC=new Int32Array(256);
+const hA=new Int32Array(1536),hB=new Int32Array(1536),hC=new Int32Array(1536),hS=new Int32Array(1536),hL=new Int32Array(1536);
+let satK,vibK,svOn,hueOn,hslOn,plain,lutOn;
+function build(){
+ const g=Math.pow(2,val[2]),c=val[3]/100,h=val[4]/100,s=val[5]/100,w=val[6]/100,b=val[7]/100;
+ const gR=1+.3*val[9]/100,gB=1-.3*val[9]/100,gG=1-.2*val[10]/100;
+ for(let i=0;i<256;i++){
+  const e=cl(l2s(Math.min(1,s2l(i/255)*g))*255+.5|0);
+  exR[i]=cl(e*gR+.5|0);exG[i]=cl(e*gG+.5|0);exB[i]=cl(e*gB+.5|0);
+  const y=i/255,d=-c*.2*Math.sin(6.2832*y)+h*.25*sm(.4,1,y)+s*.25*(1-sm(0,.6,y))+w*.2*sm(.7,1,y)+b*.2*(1-sm(0,.3,y));
+  dl[i]=Math.round(d*255);
+  oC[i]=cl(Math.round(i-val[8]/100*.2*255*Math.sin(6.2832*i/255)));
+ }
+ satK=val[11]*2.56|0;vibK=val[12]*2.56|0;svOn=satK!=0||vibK!=0;
+ hueOn=false;let sOn=false,lOn=false;
+ for(let k=0;k<8;k++){if(val[13+k*3])hueOn=true;if(val[14+k*3])sOn=true;if(val[15+k*3])lOn=true}
+ hslOn=hueOn||sOn||lOn;
+ if(hslOn)for(let i=0;i<1536;i++){
+  const deg=i*360/1536,ang=seg(13,deg,.3)*Math.PI/180,cs=Math.cos(ang),sn=Math.sin(ang),k3=(1-cs)/3,sq=sn*.57735;
+  hA[i]=(cs+k3)*256|0;hB[i]=(k3-sq)*256|0;hC[i]=(k3+sq)*256|0;
+  hS[i]=Math.max(0,(1+seg(14,deg,.01))*256|0);hL[i]=seg(15,deg,.01)*128|0;
+ }
+ const bal=val[47]/100,kk=.1+.3*val[46]/100,pS=hue2rgb(val[37]),pM=hue2rgb(val[40]),pH=hue2rgb(val[43]);
+ const mS=(pS[0]+pS[1]+pS[2])/3,mM=(pM[0]+pM[1]+pM[2])/3,mH=(pH[0]+pH[1]+pH[2])/3;
+ for(let i=0;i<256;i++){
+  const t=Math.max(0,Math.min(1,i/255+bal*.15)),wS=1-sm(.33-kk,.33+kk,t),wH=sm(.66-kk,.66+kk,t),wM=Math.max(0,1-wS-wH);
+  const aS=val[38]/100*60*wS,aM=val[41]/100*60*wM,aH=val[44]/100*60*wH,lum=(val[39]*wS+val[42]*wM+val[45]*wH)/100*50;
+  cgR[i]=Math.round(aS*(pS[0]-mS)+aM*(pM[0]-mM)+aH*(pH[0]-mH)+lum);
+  cgG[i]=Math.round(aS*(pS[1]-mS)+aM*(pM[1]-mM)+aH*(pH[1]-mH)+lum);
+  cgB[i]=Math.round(aS*(pS[2]-mS)+aM*(pM[2]-mM)+aH*(pH[2]-mH)+lum);
+ }
+ lutOn=!!lut&&amount>0;
+ plain=!(svOn||hslOn);
+ if(plain)for(let i=0;i<256;i++)if(exR[i]!=i||exG[i]!=i||exB[i]!=i||dl[i]||cgR[i]||cgG[i]||cgB[i]||oC[i]!=i){plain=false;break}
+}
+let LS=65;const LI=new Int32Array(256),LF=new Float32Array(256);
+function setLutSize(n){for(let v=0;v<256;v++){const p=v*(n-1)/255,i=Math.min(n-2,p|0);LI[v]=i;LF[v]=p-i}LS=n}setLutSize(65);
+function process(d,o){
+ const co=svOn||hslOn,S1=LS*3,S2=LS*LS*3,la=amount/100,T=lut;
+ for(let k=0;k<d.length;k+=4){
+  let r2,g2,b2;
+  if(plain){r2=d[k];g2=d[k+1];b2=d[k+2]}
+  else{
+   let r=exR[d[k]],g=exG[d[k+1]],b=exB[d[k+2]];
+   if(co){
+    const mx=r>g?(r>b?r:b):(g>b?g:b),mn=r<g?(r<b?r:b):(g<b?g:b),c=mx-mn;
+    if(c>0){
+     const s=c*255/mx|0;let h=0;
+     if(hslOn){if(mx==r){h=(g-b)*256/c|0;if(h<0)h+=1536}else if(mx==g)h=512+((b-r)*256/c|0);else h=1024+((r-g)*256/c|0);if(h>=1536)h-=1536}
+     if(svOn){const y2=(54*r+183*g+19*b)>>8;let kk=256+satK+(vibK*(255-s)/255|0);if(kk<0)kk=0;
+      r=y2+(((r-y2)*kk)>>8);g=y2+(((g-y2)*kk)>>8);b=y2+(((b-y2)*kk)>>8)}
+     if(hslOn){
+      if(hueOn){const a=hA[h],bq=hB[h],cq=hC[h];const nr=(r*a+g*bq+b*cq)>>8,ng=(r*cq+g*a+b*bq)>>8,nb=(r*bq+g*cq+b*a)>>8;r=nr;g=ng;b=nb}
+      const sf=hS[h];if(sf!=256){const y3=(54*r+183*g+19*b)>>8;r=y3+(((r-y3)*sf)>>8);g=y3+(((g-y3)*sf)>>8);b=y3+(((b-y3)*sf)>>8)}
+      const lm=hL[h];if(lm){const m=lm*s/255|0;r+=(r*m)>>8;g+=(g*m)>>8;b+=(b*m)>>8}
+     }
+     r=cl(r);g=cl(g);b=cl(b);
+    }
+   }
+   const y=(54*r+183*g+19*b)>>8,dd=dl[y];
+   r2=oC[cl(r+dd+cgR[y])];g2=oC[cl(g+dd+cgG[y])];b2=oC[cl(b+dd+cgB[y])];
+  }
+  if(lutOn){
+   const fr=LF[r2],fg=LF[g2],fb=LF[b2],o0=((LI[b2]*LS+LI[g2])*LS+LI[r2])*3,res=[0,0,0];
+   for(let q=0;q<3;q++){const p=o0+q;
+    let a=T[p]+(T[p+3]-T[p])*fr,c=T[p+S1]+(T[p+S1+3]-T[p+S1])*fr,e=T[p+S2]+(T[p+S2+3]-T[p+S2])*fr,g=T[p+S2+S1]+(T[p+S2+S1+3]-T[p+S2+S1])*fr;
+    a+=(c-a)*fg;e+=(g-e)*fg;res[q]=a+(e-a)*fb}
+   r2+=(res[0]-r2)*la;g2+=(res[1]-g2)*la;b2+=(res[2]-b2)*la;
+  }
+  o[k]=r2;o[k+1]=g2;o[k+2]=b2;o[k+3]=255;
+ }
+}
+// ===== Hiển thị =====
+function isMod(){return amount>0&&!!lut||val.some((v,i)=>v!==DEF[i])}
+function paint(){
+ dirty=false;if(!base)return;
+ if(showOrig){ctx.putImageData(base,0,0);return}
+ build();const out=ctx.createImageData(base.width,base.height);process(base.data,out.data);ctx.putImageData(out,0,0);
+}
+function redraw(){if(!dirty){dirty=true;requestAnimationFrame(paint)}}
+function setImage(bmp){
+ img=bmp;imgSeq++;cv.style.display='block';const k=Math.min(1,1280/Math.max(bmp.width,bmp.height));
+ cv.width=Math.round(bmp.width*k);cv.height=Math.round(bmp.height*k);
+ ctx.drawImage(bmp,0,0,cv.width,cv.height);base=ctx.getImageData(0,0,cv.width,cv.height);redraw();if(cur>=0&&TOOLS[cur][2]=='preset')show(cur);
+}
+function jpegEnd(u,o){let p=o+2;const n=u.length;while(p+4<=n){if(u[p]!==255)return -1;const m=u[p+1];if(m===255){p++;continue}if(m===216||m===1||(m>=208&&m<=215)){p+=2;continue}if(m===217)return p+2;const len=(u[p+2]<<8)|u[p+3];if(len<2)return -1;if(m===218){p+=2+len;for(;p+1<n;p++){if(u[p]===255&&u[p+1]===217)return p+2}return -1}p+=2+len}return -1}
+function rawPreview(buf){const u=new Uint8Array(buf),lim=Math.min(u.length,16<<20);let best=0,bo=-1,p=0;while(p<lim-2){if(u[p]===255&&u[p+1]===216&&u[p+2]===255){const e=jpegEnd(u,p);if(e>p){if(e-p>best){best=e-p;bo=p}p=e;continue}}p++}return bo>=0&&best>20000?new Blob([u.subarray(bo,bo+best)],{type:'image/jpeg'}):null}
+async function openFile(f){
+ if(!f)return;fname=f.name.replace(/\.[^.]+$/,'');msg(t('Đang mở ảnh…'));
+ try{let src=f;
+  if(/\.(nef|arw|dng|raf|cr2|orf|raw)$/i.test(f.name)){src=rawPreview(await f.arrayBuffer());if(!src){msg(t('Không thấy ảnh xem trước trong file RAW'));setTimeout(()=>msg(''),2500);return}}
+  setImage(await createImageBitmap(src,{imageOrientation:'from-image'}))}catch(e){msg(t('Không mở được ảnh'));setTimeout(()=>msg(''),2000);return}
+ msg('');
+}
+function parseCube(txt){let n=0,lo=[0,0,0],hi=[1,1,1];const out=[];
+ for(const raw of txt.split(/\r?\n/)){const l=raw.trim();if(!l||l[0]==='#')continue;const w=l.split(/\s+/);
+  if(l.charCodeAt(0)>64){if(w[0]==='LUT_3D_SIZE')n=+w[1];else if(w[0]==='LUT_1D_SIZE')throw 1;else if(w[0]==='DOMAIN_MIN')lo=w.slice(1,4).map(Number);else if(w[0]==='DOMAIN_MAX')hi=w.slice(1,4).map(Number);continue}
+  if(w.length>=3)out.push(+w[0],+w[1],+w[2])}
+ if(n<2||n>129||out.length!==n*n*n*3)throw 1;
+ const d=new Float32Array(out.length);for(let i=0;i<d.length;i++){const k=i%3;d[i]=Math.min(255,Math.max(0,(out[i]-lo[k])/(hi[k]-lo[k])*255))}return{n,d}}
+const isLut=n=>/\.(cube|llt)$/i.test(n);
+let lutList=null;
+async function loadLutList(){
+ if(lutList)return lutList;let l=[];
+ try{const r=await fetch('LUT/index.json',{cache:'no-store'});if(r.ok){const j=await r.json();l=(Array.isArray(j)?j:j.files||[]).filter(isLut)}}catch(e){}
+ if(!l.length){const m=location.hostname.match(/^([^.]+)\.github\.io$/);
+  if(m){const repo=location.pathname.split('/')[1]||m[1]+'.github.io';
+   try{const r=await fetch('https://api.github.com/repos/'+m[1]+'/'+repo+'/contents/LUT');if(r.ok)l=(await r.json()).filter(x=>x.type==='file'&&isLut(x.name)).map(x=>x.name)}catch(e){}}}
+ return lutList=l.sort((a,b)=>a.localeCompare(b))}
+const lutP={};
+function fetchLut(k){
+ if(lutCache[k])return Promise.resolve(lutCache[k]);
+ return lutP[k]||(lutP[k]=(async()=>{try{
+  const nm=k.slice(2),r=await fetch(k[0]==='f'?'presets/'+nm+'.llt':'LUT/'+nm.split('/').map(encodeURIComponent).join('/'));if(!r.ok)throw 0;
+  if(/\.cube$/i.test(nm))lutCache[k]=parseCube(await r.text());
+  else{const b=await r.arrayBuffer(),dv=new DataView(b),n=dv.getInt32(4);if(dv.getInt32(0)!==0x4C4C5431||n<2||n>129)throw 0;lutCache[k]={n,d:new Uint8Array(b,8)}}
+  return lutCache[k]}finally{delete lutP[k]}})())}
+async function loadPreset(k){
+ if(!k){pname=null;lut=null;redraw();return}
+ pname=k;
+ if(!lutCache[k]){msg(t('Đang tải preset…'));
+  try{await fetchLut(k)}catch(e){msg(t(k[0]==='l'?'Không đọc được LUT':'Lỗi tải preset'));setTimeout(()=>msg(''),2000);pname=null;return}msg('')}
+ if(pname===k){const c=lutCache[k];setLutSize(c.n);lut=c.d;redraw()}
+}
+// ===== Ảnh thu nhỏ: ảnh đang chỉnh (hoặc ảnh nền nếu chưa mở ảnh) áp từng preset =====
+let imgSeq=0;const bgImg=new Image();bgImg.src='assets/bg.jpg';
+const TW=192,TH=144,thumbURL={},tq=[],plScroll={};let tsrc=null,tbusy=0;
+const thumbSig=()=>(img?imgSeq:'bg')+'|'+val.join(',');
+function thumbSource(){
+ const sg=img?imgSeq:'bg';if(tsrc&&tsrc.sg===sg)return tsrc.d;
+ const s=img||bgImg,w=img?img.width:s.naturalWidth,h=img?img.height:s.naturalHeight;if(!w||!h)return null;
+ const k=Math.max(TW/w,TH/h),cw=TW/k,ch=TH/k,c=document.createElement('canvas');c.width=TW;c.height=TH;
+ const x=c.getContext('2d');x.drawImage(s,(w-cw)/2,(h-ch)/2,cw,ch,0,0,TW,TH);
+ const d=x.getImageData(0,0,TW,TH);tsrc={sg,d};return d}
+function renderThumb(entry){
+ const src=thumbSource();if(!src)return null;
+ const sl=lut,sn=LS,sa=amount;
+ try{lut=entry?entry.d:null;if(entry)setLutSize(entry.n);amount=100;build();
+  const o=new ImageData(TW,TH);process(src.data,o.data);
+  const c=document.createElement('canvas');c.width=TW;c.height=TH;c.getContext('2d').putImageData(o,0,0);return c.toDataURL('image/jpeg',.82)}
+ finally{lut=sl;setLutSize(sn);amount=sa;build()}}
+function pump(){while(tbusy<2&&tq.length){const job=tq.shift();tbusy++;job().then(()=>{tbusy--;pump()})}}
+const thumbJob=(k,el)=>async()=>{
+ try{const sg=thumbSig(),c=thumbURL[k||''];let url=c&&c.sg===sg?c.url:null;
+  if(!url){const entry=k?await fetchLut(k):null;url=renderThumb(entry);if(url)thumbURL[k||'']={sg:thumbSig(),url}}
+  if(url)el.style.backgroundImage='url('+url+')';else el.classList.add('bad')}
+ catch(e){el.classList.add('bad')}};
+function watch(box,el,job){
+ if(typeof IntersectionObserver==='undefined'){tq.push(job);pump();return}
+ if(!box._io)box._io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){box._io.unobserve(e.target);tq.push(e.target._job);pump()}}),{root:box,rootMargin:'0px 240px'});
+ el._job=job;box._io.observe(el)}
+// ===== Giao diện preset: Film preset | Lut preset | Yêu thích (hàng ảnh thu nhỏ vuốt ngang) =====
+let ptab=0,favs=[];try{favs=JSON.parse(localStorage.llfav||'[]')}catch(e){}
+const FILM=PRESETS.map(n=>'f:'+n),pLabel=k=>k.slice(2).replace(/\.(cube|llt)$/i,'').replace(/_/g,' '),isFav=k=>favs.includes(k);
+const FAVMSG='Chưa có mục yêu thích. Ấn giữ một preset rồi chạm ★.',NOLUT='Chưa có LUT. Thêm file .cube vào thư mục LUT trên GitHub.';
+function toggleFav(k){const i=favs.indexOf(k);i<0?favs.push(k):favs.splice(i,1);try{localStorage.llfav=JSON.stringify(favs)}catch(e){}}
+function selMark(box){[...box.children].forEach(el=>{if('_k' in el)el.classList.toggle('on',el._k?pname===el._k:!pname)})}
+const afterPick=async(k,box)=>{await loadPreset(k);markMods();selMark(box)};
+function tileFor(k,box){
+ const w=document.createElement('div');w.className='pt'+((k?pname===k:!pname)?' on':'');w._k=k||'';
+ const im=document.createElement('div');im.className='im';w.appendChild(im);
+ const nm=document.createElement('div');nm.className='nm';w.appendChild(nm);
+ const label=()=>{nm.textContent=(k&&isFav(k)&&ptab!=2?'★ ':'')+(k?pLabel(k):t('Tắt'))};label();
+ const c=thumbURL[k||''];if(c&&c.sg===thumbSig())im.style.backgroundImage='url('+c.url+')';else watch(box,w,thumbJob(k,im));
+ if(!k){w.onclick=()=>afterPick(null,box);return w}
+ let tm=null,lp=false,x0=0,y0=0;
+ const showStar=()=>{lp=true;box.querySelectorAll('.star').forEach(x=>x.remove());const st=document.createElement('button');st.className='star'+(isFav(k)?' on':'');st.textContent='★';
+  st.onclick=ev=>{ev.stopPropagation();toggleFav(k);if(ptab==2){const sx=box.scrollLeft;fillList(box,favs.slice(),FAVMSG);box.scrollLeft=sx}else{st.classList.toggle('on',isFav(k));label()}};w.appendChild(st)};
+ w.addEventListener('pointerdown',e=>{lp=false;x0=e.clientX;y0=e.clientY;tm=setTimeout(showStar,500)});
+ w.addEventListener('pointermove',e=>{if(Math.abs(e.clientX-x0)+Math.abs(e.clientY-y0)>10)clearTimeout(tm)});
+ ['pointerup','pointerleave','pointercancel'].forEach(ev=>w.addEventListener(ev,()=>clearTimeout(tm)));
+ w.addEventListener('contextmenu',e=>{e.preventDefault();clearTimeout(tm);showStar()});
+ w.onclick=()=>{if(lp){lp=false;return}afterPick(k,box)};
+ return w}
+function fillList(box,keys,emptyMsg){
+ if(box._io)box._io.disconnect();box.innerHTML='';box.appendChild(tileFor(null,box));
+ if(!keys.length&&emptyMsg){const h=document.createElement('div');h.className='hint';h.textContent=t(emptyMsg);box.appendChild(h)}
+ keys.forEach(k=>box.appendChild(tileFor(k,box)))}
+async function presetPanel(p){
+ const tab=ptab,tabs=document.createElement('div');tabs.className='ptabs';
+ ['Film preset','Lut preset','Yêu thích'].forEach((n,i)=>{const d=document.createElement('div');d.className='ptab'+(i==tab?' on':'');d.textContent=t(n);d.onclick=()=>{ptab=i;show(TI('preset'))};tabs.appendChild(d)});
+ p.appendChild(tabs);p.appendChild(slider('Cường độ',()=>amount,v=>amount=v,0,100,10,100,v=>v+'%'));
+ const box=document.createElement('div');box.className='plist';p.appendChild(box);
+ box.addEventListener('scroll',()=>{plScroll[tab]=box.scrollLeft});
+ if(tab==0)fillList(box,FILM);
+ else if(tab==2)fillList(box,favs.slice(),FAVMSG);
+ else{box.textContent=t('Đang tải danh sách LUT…');const l=await loadLutList();if(box.isConnected===false||ptab!=tab)return;fillList(box,l.map(n=>'l:'+n),NOLUT)}
+ box.scrollLeft=plScroll[tab]||0}
+// ===== Giao diện =====
+function fmt(i,v){return i==2?(v>0?'+':'')+v.toFixed(1)+' EV':(i==37||i==40||i==43)?Math.round(v)+'°':(MIN[i]>=0?Math.round(v):(v>0?'+':'')+Math.round(v))}
+function slider(label,get,set,min,max,step,def,f){
+ const r=document.createElement('div');r.className='row';
+ r.innerHTML='<div class="h"><span>'+tr(label)+'</span><b></b></div><input type="range">';
+ const inp=r.querySelector('input'),b=r.querySelector('b');
+ Object.assign(inp,{min,max,step,value:get()});b.textContent=f(get());
+ inp.oninput=()=>{set(+inp.value);b.textContent=f(+inp.value);redraw();markMods()};
+ r.querySelector('span').ondblclick=()=>{set(def);inp.value=def;b.textContent=f(def);redraw();markMods()};
+ return r;
+}
+const vs=i=>slider(NAME[i],()=>val[i],v=>val[i]=v,MIN[i],MAX[i],STEP[i],DEF[i],v=>fmt(i,v));
+function markMods(){document.querySelectorAll('.ic').forEach((el,t)=>{const T=TOOLS[t][2];
+ el.classList.toggle('mod',TOOLS[t][2]=='preset'?!!lut:Array.isArray(T)?val[T[0]]!==DEF[T[0]]:T=='hsl'?val.slice(13,37).some(v=>v):T=='grade'?val.slice(37,48).some((v,j)=>v!==DEF[37+j]):false)})}
+function reset(){val=DEF.slice();amount=100;lut=null;pname=null;redraw();markMods()}
+function chips(list,on,fn,cols){const d=document.createElement('div');d.className='chips';
+ list.forEach((n,i)=>{const c=document.createElement('div');c.className='chip'+(on===i?' on':'');
+  c.innerHTML=(cols?'<i class="dot" style="background:'+cols[i]+'"></i>':'')+n;c.onclick=()=>fn(i);d.appendChild(c)});return d}
+function show(ti){
+ const T=TOOLS[ti][2],p=$('panel');
+ if(T=='open'){$('file').click();return}
+ if(T=='reset'){reset();cur=-1;p.style.display='none';document.querySelectorAll('.ic').forEach(e=>e.classList.remove('on'));return}
+ cur=ti;document.querySelectorAll('.ic').forEach((e,i)=>e.classList.toggle('on',i==ti));
+ p.innerHTML='';p.style.display='block';
+ if(T=='preset'){
+  presetPanel(p);
+ }else if(T=='hsl'){
+  p.appendChild(chips(CN,hslSel,i=>{hslSel=i;show(TI('hsl'))},CCOL));
+  for(let j=0;j<3;j++)p.appendChild(vs(13+hslSel*3+j));
+ }else if(T=='grade'){
+  const g=document.createElement('div');g.className='grid';for(let i=37;i<48;i++)g.appendChild(vs(i));p.appendChild(g);
+ }else if(T=='save'){
+  const q=slider('Chất lượng JPEG',()=>+(localStorage.llq||95),v=>localStorage.llq=v,50,100,1,95,v=>v);
+  p.appendChild(q);
+  const b=document.createElement('button');b.className='btn';b.textContent=t('Lưu ảnh');b.onclick=save;p.appendChild(b);
+  const h=document.createElement('div');h.className='hint';h.textContent=img?fname+' → '+fname+'_LL.jpg (max 4096 px)':t('Chưa mở ảnh');p.appendChild(h);
+ }else p.appendChild(vs(T[0]));
+}
+async function save(){
+ if(!img){msg(t('Chưa mở ảnh'));setTimeout(()=>msg(''),1500);return}
+ msg(t('Đang xử lý ảnh…'));await new Promise(r=>setTimeout(r,30));
+ const k=Math.min(1,4096/Math.max(img.width,img.height)),c=document.createElement('canvas');
+ c.width=Math.round(img.width*k);c.height=Math.round(img.height*k);
+ const x=c.getContext('2d');x.drawImage(img,0,0,c.width,c.height);
+ const id=x.getImageData(0,0,c.width,c.height);build();process(id.data,id.data);x.putImageData(id,0,0);
+ c.toBlob(b=>{const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=fname+'_LL.jpg';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),5000);msg(t('Đã lưu'));setTimeout(()=>msg(''),1500)},'image/jpeg',(+(localStorage.llq||95))/100);
+}
+// ===== Khởi tạo =====
+function renderStrip(){$('strip').innerHTML='';TOOLS.forEach((T,i)=>{const d=document.createElement('div');d.className='ic'+(i==cur?' on':'');d.innerHTML='<img src="assets/'+T[1]+'" alt=""><span></span>';d.querySelector('span').textContent=tr(T[0]);d.onclick=()=>show(i);$('strip').appendChild(d)});markMods()}
+$('file').onchange=e=>{openFile(e.target.files[0]);e.target.value=''};
+$('stage').addEventListener('click',e=>{if(!img&&e.target===$('stage'))$('file').click()});
+cv.addEventListener('pointerdown',()=>{showOrig=true;$('tag').style.display='block';redraw()});
+['pointerup','pointercancel','pointerleave'].forEach(ev=>cv.addEventListener(ev,()=>{if(showOrig){showOrig=false;$('tag').style.display='none';redraw()}}));
+['dragover','drop'].forEach(ev=>document.addEventListener(ev,e=>{e.preventDefault();if(ev=='drop')openFile(e.dataTransfer.files[0])}));
+
+LANGS.forEach((n,i)=>{const o=document.createElement('option');o.value=i;o.textContent=n;$('lang').appendChild(o)});
+function applyLang(){
+ $('lang').value=L;document.documentElement.lang=LCODE[L];$('tag').textContent=t('Ảnh gốc');
+ $('lkey').textContent=t('Khóa API Meta AI');$('lmod').textContent=t('Mô hình');$('lbase').textContent=t('Địa chỉ API');$('lprov').textContent=t('Nhà cung cấp');{const o=$('gprov').options;o[0].textContent='Ollama · '+t('trên máy bạn');o[1].textContent='LM Studio · '+t('trên máy bạn');o[5].textContent=t('Khác')}$('lhelp').textContent=t('Khóa chỉ lưu trong trình duyệt này. Lấy khóa miễn phí:');
+ $('latt').textContent=t('Kèm ảnh hiện tại');$('cin').placeholder=t('Hỏi Meta AI về chỉnh ảnh…');$('csend').textContent=t('Gửi');
+ renderStrip();if(cur>=0)show(cur);
+}
+$('lang').onchange=e=>{L=+e.target.value;localStorage.lang=LCODE[L];applyLang()};
+// ===== Chat Meta AI =====
+const PROV={meta:{b:'https://api.llama.com/compat/v1',m:'Llama-4-Maverick-17B-128E-Instruct-FP8',l:'https://llama.developer.meta.com'},groq:{b:'https://api.groq.com/openai/v1',m:'meta-llama/llama-4-scout-17b-16e-instruct',l:'https://console.groq.com/keys'},openrouter:{b:'https://openrouter.ai/api/v1',m:'meta-llama/llama-4-maverick',l:'https://openrouter.ai/keys'},other:{b:'',m:'',l:''}};
+PROV.ollama={b:'http://localhost:11434/v1',m:'llama3.2',l:'https://ollama.com/download',local:1};PROV.lmstudio={b:'http://localhost:1234/v1',m:'',l:'https://lmstudio.ai',local:1};
+const prov=()=>PROV[localStorage.mprov]?localStorage.mprov:'ollama';
+const mixed=b=>location.protocol==='https:'&&/^http:\/\//i.test(b)&&!/^http:\/\/(localhost|127\.0\.0\.1|\[::1\])(:|\/|$)/i.test(b);
+function syncProvUI(){const d=PROV[prov()].local?'none':'';$('lkey').style.display=d;$('gkey').style.display=d}
+const cleanKey=k=>(k||'').trim().replace(/^bearer\s+/i,'').replace(/^["'“”‘’\s]+|["'“”‘’\s]+$/g,'');
+const guessProv=k=>/^gsk_/.test(k)?'groq':/^sk-or-/.test(k)?'openrouter':/^LLM\|/.test(k)?'meta':'';
+const foreign=k=>/^AIza/.test(k)?'Google':/^sk-ant-/.test(k)?'Anthropic':/^sk-(?!or-)/.test(k)?'OpenAI':'';
+function helpLink(v){const a=$('lhelplink'),l=PROV[v].l;a.href=l||'#';a.textContent=l.replace('https://','')}
+function setProv(v){localStorage.mprov=v;$('gprov').value=v;const P=PROV[v];$('gbase').value=P.b;$('gmod').value=P.m;localStorage.mbase=P.b;localStorage.mmod=P.m;helpLink(v);syncProvUI();if(P.local)refreshModels()}
+$('gkey').value=localStorage.mkey||'';$('gprov').value=prov();$('gmod').value=localStorage.mmod||PROV[prov()].m;$('gbase').value=localStorage.mbase||PROV[prov()].b;helpLink(prov());syncProvUI();
+$('gprov').onchange=e=>setProv(e.target.value);
+async function refreshModels(){
+ const k=cleanKey(localStorage.mkey),b=($('gbase').value||PROV[prov()].b).replace(/\/+$/,''),loc=!!PROV[prov()].local;$('cstat').textContent='…';
+ try{if(mixed(b))throw new Error(t('Trình duyệt chặn trang HTTPS gọi tới địa chỉ HTTP ngoài máy này. Dùng http://localhost trên chính máy chạy Ollama, hoặc một đường hầm HTTPS (Tailscale / Cloudflare Tunnel).'));
+  let r;try{r=await fetch(b+'/models',k?{headers:{Authorization:'Bearer '+k}}:{})}catch(e){throw new Error(t(loc?'Không kết nối được máy chủ trên máy bạn. Kiểm tra: Ollama/LM Studio đang chạy; đã cho phép trang này (Ollama: đặt OLLAMA_ORIGINS=https://<tên>.github.io rồi khởi động lại; LM Studio: bật CORS); và trang đang mở trên chính máy đó.':'Không kết nối được API. Có thể nhà cung cấp chặn gọi từ trình duyệt (CORS): thử đổi Địa chỉ API.'))}
+  let j={};try{j=await r.json()}catch(e){}
+  if(!r.ok)throw new Error(r.status+' '+((j.error&&(j.error.message||j.error))||''));
+  const ids=(j.data||j.models||[]).map(m=>m.id||m.name).filter(Boolean),dl=$('mlist');dl.innerHTML='';ids.forEach(i=>{const o=document.createElement('option');o.value=i;dl.appendChild(o)});
+  if(loc){if(!ids.length){$('cstat').textContent=t('Không có mô hình nào được cài. Chạy "ollama pull llama3.2" rồi bấm ↻.');return}
+   const cur=$('gmod').value;if(!ids.includes(cur)){const pick=ids.find(i=>/llama/i.test(i))||ids[0];$('gmod').value=pick;localStorage.mmod=pick}}
+  $('cstat').textContent=ids.length+' '+t('mô hình')+' ('+t('chọn trong ô Mô hình')+')'}
+ catch(e){$('cstat').textContent=t('Lỗi')+': '+e.message}}
+$('gmref').onclick=refreshModels;
+$('gkey').oninput=e=>{const k=cleanKey(e.target.value);localStorage.mkey=k;const g=guessProv(k);if(g&&g!==prov())setProv(g);
+ const f=foreign(k);$('cstat').textContent=f?t('Khóa này thuộc {x}, không dùng được với Llama. Hãy dùng khóa của nhà cung cấp đã chọn.').replace('{x}',f):''};$('gmod').oninput=e=>localStorage.mmod=e.target.value.trim();$('gbase').oninput=e=>localStorage.mbase=e.target.value.trim();
+const closeChat=()=>{$('chat').style.display='none';$('cset').style.display='none'};
+const vv=window.visualViewport,rt=document.documentElement;
+function fitKb(){const h=vv?vv.height:innerHeight,kb=vv?Math.max(0,innerHeight-vv.height-vv.offsetTop):0;rt.style.setProperty('--kb',kb+'px');rt.style.setProperty('--vh',h+'px')}
+if(vv){vv.addEventListener('resize',fitKb);vv.addEventListener('scroll',fitKb)}addEventListener('resize',fitKb);fitKb();
+$('cb').onclick=()=>{const c=$('chat'),open=c.style.display!='flex';c.style.display=open?'flex':'none';if(open){fitKb();$('cin').focus()}};
+$('log').addEventListener('click',()=>{if(!getSelection||String(getSelection())==='')$('cin').focus()});
+$('cbar').addEventListener('click',e=>{if(e.target===$('cbar'))$('cin').focus()});
+document.addEventListener('pointerdown',e=>{if($('chat').style.display=='flex'&&!e.target.closest('#chat')&&!e.target.closest('#cb'))closeChat()},true);
+document.addEventListener('keydown',e=>{if(e.key=='Escape')closeChat()});
+$('gear').onclick=()=>{const c=$('cset'),o=c.style.display!='block';c.style.display=o?'block':'none';if(o&&PROV[prov()].local)refreshModels()};
+const hist=[];let busy=false;
+function addMsg(cls,text){const d=document.createElement('div');d.className='m '+cls;d.textContent=text;$('log').appendChild(d);$('log').scrollTop=1e9;return d}
+async function chatCall(base,key,model,msgs){
+ const h={'Content-Type':'application/json'};if(key)h.Authorization='Bearer '+key;
+ let r;try{r=await fetch(base+'/chat/completions',{method:'POST',headers:h,body:JSON.stringify({model,messages:msgs})})}
+ catch(e){throw new Error(t(PROV[prov()].local?'Không kết nối được máy chủ trên máy bạn. Kiểm tra: Ollama/LM Studio đang chạy; đã cho phép trang này (Ollama: đặt OLLAMA_ORIGINS=https://<tên>.github.io rồi khởi động lại; LM Studio: bật CORS); và trang đang mở trên chính máy đó.':'Không kết nối được API. Có thể nhà cung cấp chặn gọi từ trình duyệt (CORS): thử đổi Địa chỉ API.'))}
+ let j={};try{j=await r.json()}catch(e){}
+ return{r,j}}
+async function ask(){
+ const q=$('cin').value.trim();if(busy||!q)return;
+ const P=PROV[prov()],key=cleanKey(localStorage.mkey);
+ if(!key&&!P.local){$('cset').style.display='block';addMsg('a',t('Nhập khóa API Meta AI ở ⚙ trước'));return}
+ $('cin').value='';addMsg('u',q);const w=addMsg('a','…');busy=true;
+ let content=q;if($('att').checked&&img)content=[{type:'text',text:q},{type:'image_url',image_url:{url:cv.toDataURL('image/jpeg',.8)}}];
+ const cur_=val.map((v,i)=>i>=2&&v!==DEF[i]?tr(NAME[i],1)+'='+v:'').filter(Boolean).join(', ')+(pname?'; preset='+pLabel(pname)+' '+amount+'%':'');
+ const sys='You are a photo-editing assistant inside LightLAB Web. Available tools: Exposure (-5..5 EV), Contrast, Highlights, Shadows, Whites, Blacks, S-curve, Temperature, Tint, Saturation, Vibrance (all -100..100), HSL for 8 colors (hue/saturation/luminance), Color grading for shadows/midtones/highlights (hue 0-360, saturation 0-100, luminance), 16 film presets ('+PRESETS.join(', ')+') and user LUT presets (.cube). Give concrete slider values the user can apply. Be concise. Reply in '+LANGS[L]+'. Current settings: '+(cur_||'none')+'.';
+ try{
+  const base=(localStorage.mbase||P.b).replace(/\/+$/,''),model=localStorage.mmod||P.m;
+  if(!base||!model)throw new Error(t('Nhập Địa chỉ API và Mô hình ở ⚙'));
+  if(mixed(base))throw new Error(t('Trình duyệt chặn trang HTTPS gọi tới địa chỉ HTTP ngoài máy này. Dùng http://localhost trên chính máy chạy Ollama, hoặc một đường hầm HTTPS (Tailscale / Cloudflare Tunnel).'));
+  const sm={role:'system',content:sys};
+  let {r,j}=await chatCall(base,key,model,[sm,...hist,{role:'user',content}]),note='';
+  if(!r.ok&&Array.isArray(content)&&/image|vision|multimodal/i.test(JSON.stringify(j.error||j))){note=t('Mô hình này không đọc được ảnh nên chỉ gửi văn bản.')+'\n\n';({r,j}=await chatCall(base,key,model,[sm,...hist,{role:'user',content:q}]))}
+  if(!r.ok){const em=j.error&&(j.error.message||j.error)||'';let m=r.status+' '+(typeof em==='string'?em:JSON.stringify(em));
+   if(r.status===401||r.status===403){const f=foreign(key);m+='\n'+(f?t('Khóa này thuộc {x}, không dùng được với Llama. Hãy dùng khóa của nhà cung cấp đã chọn.').replace('{x}',f):t('Khóa bị từ chối. Kiểm tra: khóa đúng nhà cung cấp đã chọn trong ⚙, không thừa ký tự, còn hiệu lực.'))+'\n['+base+']'}
+   if(P.local&&r.status===404)m+='\n'+t('Mô hình chưa được tải: chạy "ollama pull <tên>" hoặc bấm ↻ để chọn mô hình đã cài.');
+   throw new Error(m)}
+  const a=(j.choices&&j.choices[0]&&j.choices[0].message&&j.choices[0].message.content)||'…',at=typeof a==='string'?a:JSON.stringify(a);
+  w.textContent=note+at;hist.push({role:'user',content:q},{role:'assistant',content:at});if(hist.length>20)hist.splice(0,2);
+ }catch(e){w.textContent=t('Lỗi')+': '+e.message}
+ busy=false;$('log').scrollTop=1e9;
+}
+$('csend').onclick=ask;$('cin').onkeydown=e=>{if(e.key=='Enter')ask()};
+applyLang();
+</script>
+</body>
+</html>
